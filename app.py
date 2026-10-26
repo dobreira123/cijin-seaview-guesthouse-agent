@@ -263,9 +263,8 @@ Today is {date.today().isoformat()}.
 GROUNDING
 1. Answer only from tool results. Never answer from memory, and never invent prices, rooms, rules or services.
 2. Before you say the guesthouse does or does not have something (a facility, a service, a rule), check it with
-   get_guesthouse_info (e.g. topic "facilities") or search_rooms. If the tool result does not mention it, do not say
-   that it exists or that it does not exist: say plainly that you do not have that information, and call
-   transfer_to_human to give the staff contact. Do not guess.
+   get_guesthouse_info (e.g. topic "facilities") or search_rooms. If the tools do not have it, say plainly that you do
+   not have that information and call transfer_to_human to give the staff contact. Do not guess.
 
 SCOPE
 3. Only talk about this guesthouse and staying here (rooms, services, getting here, booking).
@@ -317,7 +316,7 @@ def run_agent(chat_history):
 
     for step in range(MAX_STEPS):
         message = client.chat.completions.create(
-            model=CHAT_MODEL, messages=messages, tools=TOOL_SPECS, temperature=0.2,
+            model=CHAT_MODEL, messages=messages, tools=TOOL_SPECS, temperature=0,
         ).choices[0].message
 
         if not message.tool_calls:                     # plain text: the turn is finished
