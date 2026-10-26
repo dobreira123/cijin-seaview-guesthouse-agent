@@ -202,7 +202,7 @@ TOOL_SPECS = [
     {"type": "function", "function": {
         "name": "get_guesthouse_info",
         "description": ("Get one piece of guesthouse information: check-in/check-out time, address, how to get here "
-                        "(transport), parking, breakfast time, payment methods, deposit, cancellation policy, pets, "
+                        "(transport), parking, breakfast time, payment methods, deposit, cancellation policy and deposit refunds, pets, "
                         "Wi-Fi, quiet hours and smoking, discounts and weekend prices, facilities (kitchen, laundry, "
                         "luggage), contact phone/LINE."),
         "parameters": {"type": "object",
@@ -236,8 +236,9 @@ TOOL_SPECS = [
                        "required": ["room", "nights"]}}},
     {"type": "function", "function": {
         "name": "transfer_to_human",
-        "description": ("Hand over to a staff member. Use this for complaints, refunds, a request for a manager or a person, "
-                        "or guesthouse questions that no other tool can answer."),
+        "description": ("Hand over to a staff member. Always use this for complaints (dirty room, broken air conditioner, "
+                        "noise, rude staff), refunds or compensation, when the guest asks for a person, the owner or a "
+                        "manager (經理、老闆、真人、客訴、退錢), and for guesthouse questions that no other tool can answer."),
         "parameters": {"type": "object",
                        "properties": {"reason": {"type": "string"}}, "required": []}}},
     {"type": "function", "function": {
@@ -261,8 +262,9 @@ Today is {date.today().isoformat()}.
 
 GROUNDING
 1. Answer only from tool results. Never answer from memory, and never invent prices, rooms, rules or services.
-2. If a tool says nothing was found, say plainly that you do not have that information, and give the staff contact
-   by calling transfer_to_human. Do not guess.
+2. Before you say the guesthouse does or does not have something (a facility, a service, a rule), check it with
+   get_guesthouse_info (e.g. topic "facilities") or search_rooms. If the tools do not have it, say plainly that you do
+   not have that information and call transfer_to_human to give the staff contact. Do not guess.
 
 SCOPE
 3. Only talk about this guesthouse and staying here (rooms, services, getting here, booking).
@@ -276,7 +278,8 @@ ROUTING
    -> search_rooms.
 6. Any total price, more than one night, weekend nights, or room plus extras -> calculate_stay. Never add or multiply
    numbers yourself.
-7. Complaints, refunds, asking for a person or a manager, or guesthouse questions no tool can answer -> transfer_to_human.
+7. Complaints, refunds, asking for a person or a manager, or guesthouse questions no tool can answer -> ALWAYS call
+   transfer_to_human. Never only apologise without calling it.
 8. Booking a room -> make_booking with confirmed=false first; use confirmed=true only after the customer says yes.
 
 LANGUAGE AND FORMAT
@@ -413,7 +416,9 @@ with gr.Blocks(title="Cijin Seaview Guesthouse Agent") as demo:
                 "The panel on the right shows which tool was used and what it returned.")
     with gr.Row():
         with gr.Column(scale=3):
-            chatbot = gr.Chatbot(type="messages", value=start_chat(), height=460, label="Xiao Hai 小海")
+            # Gradio 5 needs type="messages"; Gradio 6 uses the messages format by default.
+            chat_kwargs = {"type": "messages"} if int(gr.__version__.split(".")[0]) < 6 else {}
+            chatbot = gr.Chatbot(value=start_chat(), height=460, label="Xiao Hai 小海", **chat_kwargs)
             with gr.Row():
                 user_box = gr.Textbox(placeholder="Ask about rooms, prices, check-in ... 請輸入問題",
                                       show_label=False, scale=8)
