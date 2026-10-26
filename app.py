@@ -294,11 +294,22 @@ def reply_language(text):
     return "Traditional Chinese (繁體中文)" if re.search(r"[一-鿿]", text) else "English"
 
 
+def text_of(content):
+    """Gradio 6 stores a message as a list of parts ([{"type": "text", "text": ...}]); Gradio 5 as a string."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        return content.get("text") or ""
+    if isinstance(content, (list, tuple)):
+        return " ".join(text_of(part) for part in content)
+    return str(content or "")
+
+
 def run_agent(chat_history):
     """Answer the last question in chat_history. Returns (answer, trace)."""
-    question = chat_history[-1]["content"]
+    question = text_of(chat_history[-1]["content"])
     messages = ([{"role": "system", "content": SYSTEM_PROMPT}]
-                + [{"role": m["role"], "content": m["content"]} for m in chat_history[:-1]]
+                + [{"role": m["role"], "content": text_of(m["content"])} for m in chat_history[:-1]]
                 + [{"role": "system", "content": f"Reply in {reply_language(question)}."}]   # the program picks the language
                 + [{"role": "user", "content": question}])
     trace = []
